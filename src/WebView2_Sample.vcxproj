@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\boost_cpprestsdk_x64_v2019.1.1.0.0\build\native\boost_cpprestsdk_x64_v2019.1.props" Condition="Exists('..\packages\boost_cpprestsdk_x64_v2019.1.1.0.0\build\native\boost_cpprestsdk_x64_v2019.1.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -156,6 +157,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CHtmlDialog.h" />
+    <ClInclude Include="CHTMLhost.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
@@ -165,6 +167,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CHtmlDialog.cpp" />
+    <ClCompile Include="CHTMLhost.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -189,6 +192,7 @@
     <Import Project="..\packages\Microsoft.Web.WebView2.0.9.622.11\build\native\Microsoft.Web.WebView2.targets" Condition="Exists('..\packages\Microsoft.Web.WebView2.0.9.622.11\build\native\Microsoft.Web.WebView2.targets')" />
     <Import Project="..\packages\Microsoft.Windows.ImplementationLibrary.1.0.200902.2\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\packages\Microsoft.Windows.ImplementationLibrary.1.0.200902.2\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
     <Import Project="..\packages\wtl.10.0.10077\build\native\wtl.targets" Condition="Exists('..\packages\wtl.10.0.10077\build\native\wtl.targets')" />
+    <Import Project="..\packages\boost_cpprestsdk_x64_v2019.1.1.0.0\build\native\boost_cpprestsdk_x64_v2019.1.targets" Condition="Exists('..\packages\boost_cpprestsdk_x64_v2019.1.1.0.0\build\native\boost_cpprestsdk_x64_v2019.1.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -197,5 +201,7 @@
     <Error Condition="!Exists('..\packages\Microsoft.Web.WebView2.0.9.622.11\build\native\Microsoft.Web.WebView2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Web.WebView2.0.9.622.11\build\native\Microsoft.Web.WebView2.targets'))" />
     <Error Condition="!Exists('..\packages\Microsoft.Windows.ImplementationLibrary.1.0.200902.2\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.ImplementationLibrary.1.0.200902.2\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
     <Error Condition="!Exists('..\packages\wtl.10.0.10077\build\native\wtl.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\wtl.10.0.10077\build\native\wtl.targets'))" />
+    <Error Condition="!Exists('..\packages\boost_cpprestsdk_x64_v2019.1.1.0.0\build\native\boost_cpprestsdk_x64_v2019.1.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_cpprestsdk_x64_v2019.1.1.0.0\build\native\boost_cpprestsdk_x64_v2019.1.props'))" />
+    <Error Condition="!Exists('..\packages\boost_cpprestsdk_x64_v2019.1.1.0.0\build\native\boost_cpprestsdk_x64_v2019.1.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_cpprestsdk_x64_v2019.1.1.0.0\build\native\boost_cpprestsdk_x64_v2019.1.targets'))" />
   </Target>
 </Project>
