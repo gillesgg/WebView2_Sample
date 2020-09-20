@@ -1,8 +1,7 @@
 # WebView2_Sample
 WebView2 sample
 
-Build
-
+# Build
 git clone https://github.com/microsoft/vcpkg
 .\vcpkg\bootstrap-vcpkg.bat
 # Build boost & cpprestsdk
