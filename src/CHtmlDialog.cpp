@@ -55,9 +55,7 @@ LRESULT	CHtmlDialog::OnSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 LRESULT	CHtmlDialog::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
-	if (m_bModal)
-		EndDialog(1);
-	//PostQuitMessage(0);
+	EndDialog(0);	
 	return bHandled = FALSE;
 }
 
@@ -92,7 +90,7 @@ HRESULT CHtmlDialog::InitWebView()
 		Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(this, &CHtmlDialog::OnCreateEnvironmentCompleted).Get());
 	if (!SUCCEEDED(hr))
 	{
-		LOG_ERROR << __FUNCTION__ << " failed hr=" << hr;
+		LOG_ERROR << __FUNCTION__ << " failed hr=" << hr << " Message=" << std::system_category().message(hr);
 	}
 	return (hr);
 }
@@ -114,18 +112,18 @@ HRESULT CHtmlDialog::OnCreateEnvironmentCompleted(HRESULT result, ICoreWebView2E
 		result = environment->QueryInterface(IID_PPV_ARGS(&webview2imp_->webViewEnvironment_));
 		if (FAILED(result))
 		{
-			LOG_ERROR << __FUNCTION__ << " failed hr=" << result;
+			LOG_ERROR << __FUNCTION__ << " failed hr=" << result << " Message=" << std::system_category().message(result);
 			return (result);
 		}
 		result = webview2imp_->webViewEnvironment_->CreateCoreWebView2Controller(m_hWnd, Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(this, &CHtmlDialog::OnCreateWebViewControllerCompleted).Get());
 		if (FAILED(result))
 		{
-			LOG_ERROR << __FUNCTION__ << " failed hr=" << result;
+			LOG_ERROR << __FUNCTION__ << " failed hr=" << result << " Message=" << std::system_category().message(result);
 		}
 	}
 	else
 	{
-		LOG_ERROR << __FUNCTION__ << " failed hr=" << result;
+		LOG_ERROR << __FUNCTION__ << " failed hr=" << result << " Message=" << std::system_category().message(result);
 	}
 	return (result);
 }
@@ -141,7 +139,7 @@ HRESULT CHtmlDialog::ResizeToClientArea()
 		hr = webview2imp_->webController_->put_Bounds(bounds);
 		if (FAILED(hr))
 		{
-			LOG_ERROR << __FUNCTION__ << " failed hr=" << hr;
+			LOG_ERROR << __FUNCTION__ << " failed hr=" << hr << " Message=" << std::system_category().message(hr);
 		}
 	}
 	return (hr);
@@ -163,22 +161,22 @@ HRESULT CHtmlDialog::OnCreateWebViewControllerCompleted(HRESULT result, ICoreWeb
 	webview2imp_->webController_ = controller;
 	if (FAILED(hr = controller->get_CoreWebView2(&webview2imp_->webView_)))
 	{
-		LOG_ERROR << __FUNCTION__ << " Cannot get CoreWebView2" << " hr=" << hr;
+		LOG_ERROR << __FUNCTION__ << " Cannot get CoreWebView2" << " hr=" << hr << " Message=" << std::system_category().message(hr);
 		return hr;
 	}
 	if (FAILED(hr = webview2imp_->webView_->get_Settings(&webview2imp_->webSettings_)))
 	{
-		LOG_ERROR << __FUNCTION__ << " Cannot get Setting" << " hr=" << hr;
+		LOG_ERROR << __FUNCTION__ << " Cannot get Setting" << " hr=" << hr << " Message=" << std::system_category().message(hr);
 		return hr;
 	}
 	if (FAILED(hr = RegisterEventHandlers()))
 	{
-		LOG_ERROR << __FUNCTION__ << " Cannot RegisterEventHandlers" << " hr=" << hr;
+		LOG_ERROR << __FUNCTION__ << " Cannot RegisterEventHandlers" << " hr=" << hr << " Message=" << std::system_category().message(hr);
 		return hr;
 	}
 	if (FAILED(hr = ResizeToClientArea()))
 	{
-		LOG_ERROR << __FUNCTION__ << " Cannot ResizeToClientArea" << " hr=" << hr;
+		LOG_ERROR << __FUNCTION__ << " Cannot ResizeToClientArea" << " hr=" << hr << " Message=" << std::system_category().message(hr);
 		return hr;
 	}
 	auto callback = m_callbacks[CallbackType::CreationCompleted];
@@ -236,7 +234,7 @@ HRESULT CHtmlDialog::RegisterEventHandlers()
 		.Get(), &m_navigationCompletedToken);
 	if (FAILED(hr))
 	{
-		LOG_ERROR << __FUNCTION__ << " add_NavigationCompleted failed, hr=" << hr;
+		LOG_ERROR << __FUNCTION__ << " add_NavigationCompleted failed, hr=" << hr << " Message=" << std::system_category().message(hr);
 	}
 	// NavigationStarting handler
 	hr = webview2imp_->webView_->add_NavigationStarting(
@@ -257,7 +255,7 @@ HRESULT CHtmlDialog::RegisterEventHandlers()
 	hr = webview2imp_->webView_->AddWebResourceRequestedFilter(L"*", COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
 	if (FAILED(hr))
 	{
-		LOG_ERROR << __FUNCTION__ << " AddWebResourceRequestedFilter failed, hr=" << hr;
+		LOG_ERROR << __FUNCTION__ << " AddWebResourceRequestedFilter failed, hr=" << hr << " Message=" << std::system_category().message(hr);
 	}
 	hr = webview2imp_->webView_->add_WebResourceRequested(
 		Callback<ICoreWebView2WebResourceRequestedEventHandler>(
@@ -271,13 +269,13 @@ HRESULT CHtmlDialog::RegisterEventHandlers()
 				auto hr = args->get_Request(&request);
 				if (FAILED(hr))
 				{
-					LOG_ERROR << __FUNCTION__ << " get_Request failed, hr=" << hr;
+					LOG_ERROR << __FUNCTION__ << " get_Request failed, hr=" << hr << " Message=" << std::system_category().message(hr);
 					return (hr);
 				}
 				hr = request->get_Headers(&headers);
 				if (FAILED(hr))
 				{
-					LOG_ERROR << __FUNCTION__ << " get_Headers failed, hr=" << hr;
+					LOG_ERROR << __FUNCTION__ << " get_Headers failed, hr=" << hr << " Message=" << std::system_category().message(hr);
 					return (hr);
 				}
 				BOOL hasheader = FALSE;
@@ -306,7 +304,7 @@ HRESULT CHtmlDialog::RegisterEventHandlers()
 
 	if (FAILED(hr))
 	{
-		LOG_ERROR << __FUNCTION__ << " add_NavigationStarting failed, hr=" << hr;
+		LOG_ERROR << __FUNCTION__ << " add_NavigationStarting failed, hr=" << hr << " Message=" << std::system_category().message(hr);
 	}
 	if (!url_.empty())
 		hr = webview2imp_->webView_->Navigate(url_.c_str());
@@ -421,7 +419,7 @@ HRESULT CHtmlDialog::GetCookies()
 		hr = webview2imp_->webView_->GetDevToolsProtocolEventReceiver(L"Network.getAllCookies", &receiver);
 		if (FAILED(hr))
 		{
-			LOG_ERROR << __FUNCTION__ << " GetDevToolsProtocolEventReceiver failed, hr=" << hr;
+			LOG_ERROR << __FUNCTION__ << " GetDevToolsProtocolEventReceiver failed, hr=" << hr << " Message=" << std::system_category().message(hr);
 			return (hr);
 		}
 		hr = webview2imp_->webView_->CallDevToolsProtocolMethod(

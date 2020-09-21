@@ -3,11 +3,8 @@
 #include "CHtmlDialog.h"
 #include "Utility/Logger/Logger.h"
 
-
-
 INT_PTR CHTMLhost::ShowDialog(std::wstring url)
 {
-
 	if (!url.empty())
 	{
 		CHtmlDialog dialog(url);
