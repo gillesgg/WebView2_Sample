@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "CHTMLhost.h"
 #include "CHtmlDialog.h"
-#include "Utility/Logger/Logger.h"
+
 
 INT_PTR CHTMLhost::ShowDialog(std::wstring url)
 {
@@ -11,18 +11,17 @@ INT_PTR CHTMLhost::ShowDialog(std::wstring url)
 
 		dialog.RegisterCallback(CHtmlDialog::CallbackType::CreationCompleted, [this]()
 		{
-			LOG_INFO << __FUNCTION__ << " CallbackType::CreationCompleted";
-
+			ATLTRACE("message=%s\n", "CallbackType::CreationCompleted");
 		});
 
 		dialog.RegisterCallback(CHtmlDialog::CallbackType::NavigationCompleted, [this]()
 		{
-			LOG_INFO << __FUNCTION__ << " CallbackType::NavigationCompleted";
+			ATLTRACE("message=%s\n", "CallbackType::AutentCompleted");
 		});
 
 		dialog.RegisterCallback(CHtmlDialog::CallbackType::AutentCompleted, [this]()
 		{
-			LOG_INFO << __FUNCTION__ << " CallbackType::AutentCompleted";
+			ATLTRACE("message=%s\n", "CallbackType::AutentCompleted");
 		});
 		return dialog.DoModal();
 	}

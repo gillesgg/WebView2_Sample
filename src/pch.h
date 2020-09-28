@@ -7,6 +7,16 @@
 #ifndef PCH_H
 #define PCH_H
 
+
+// error C2039: 'wait_for': is not a member of 'winrt::impl'
+#include "winrt/base.h"
+namespace winrt::impl
+{
+	template <typename Async>
+	auto wait_for(Async const& async, Windows::Foundation::TimeSpan const& timeout);
+}
+
+
 // https://mariusbancila.ro/blog/2020/01/29/using-microsoft-edge-in-a-native-windows-desktop-app-part-2/
 // Windows Header Files
 #include <windows.h>
@@ -35,6 +45,7 @@
 #include <atlcom.h>
 #include <atlctl.h>
 #include <atlwin.h>
+#include <atltrace.h>
 
 // WTL
 #include <atlapp.h>
@@ -57,27 +68,12 @@
 #include <WebView2.h>
 #include <WebView2EnvironmentOptions.h>
 
-// Boost log
-
-#include <boost/log/trivial.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/common.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/attributes.hpp>
-#include <boost/log/sinks.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/utility/setup/console.hpp>
-#include <boost/log/utility/setup/file.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/sources/logger.hpp>
-#include <boost/log/support/date_time.hpp>
-#include <boost/log/expressions/keyword.hpp>
 
  
 //json
 #include <cpprest/json.h>
+
+
 
 extern CAppModule _Module; 
 
@@ -91,12 +87,6 @@ static constexpr UINT MSG_NAVIGATE = WM_APP + 123;
 static constexpr UINT MSG_RUN_ASYNC_CALLBACK = WM_APP + 124;
 
 
-namespace		logging = boost::log;
-namespace		src = boost::log::sources;
-namespace		keywords = boost::log::keywords;
-namespace		attrs = boost::log::attributes;
-namespace		sinks = boost::log::sinks;
-namespace		expr = boost::log::expressions;
 namespace		fs = std::filesystem;
 
 #include "framework.h"

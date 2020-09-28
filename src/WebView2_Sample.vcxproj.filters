@@ -42,9 +42,6 @@
     <ClInclude Include="CHtmlDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utility\Logger\Logger.h">
-      <Filter>Utility\Logger</Filter>
-    </ClInclude>
     <ClInclude Include="CHTMLhost.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -58,9 +55,6 @@
     </ClCompile>
     <ClCompile Include="CHtmlDialog.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Utility\Logger\Logger.cpp">
-      <Filter>Utility\Logger</Filter>
     </ClCompile>
     <ClCompile Include="CHTMLhost.cpp">
       <Filter>Source Files</Filter>

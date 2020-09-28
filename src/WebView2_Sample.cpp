@@ -17,13 +17,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_ int       nCmdShow)
 {
     CoInitialize(0L);
-
     CHTMLhost host;
-
-    
-
     host.ShowDialog(L"http://msdn.microsoft.com");
-
-    
-
 }
