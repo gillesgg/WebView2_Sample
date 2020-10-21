@@ -78,20 +78,51 @@ void CHtmlDialog::CloseWebView()
 	}
 }
 
+std::wstring CHtmlDialog::GetAppDataDirectory()
+{
+	TCHAR path[MAX_PATH];
+	std::wstring dataDirectory;
+	HRESULT hr = SHGetFolderPath(nullptr, CSIDL_APPDATA, NULL, 0, path);
+	if (SUCCEEDED(hr))
+	{
+		dataDirectory = std::wstring(path);
+		dataDirectory.append(L"\\Microsoft\\");
+	}
+	else
+	{
+		dataDirectory = std::wstring(L".\\");
+	}
+
+	dataDirectory.append(L"WebView_Sample");
+	return dataDirectory;
+}
 
 HRESULT CHtmlDialog::InitWebView()
 {
 	ATLTRACE("function=%s\n",__FUNCTION__);
 
+	std::wstring userDataDirectory = GetAppDataDirectory();
+	userDataDirectory.append(L"\\User Data");
+
+
 	ICoreWebView2EnvironmentOptions* options = nullptr;
-	HRESULT hr = CreateCoreWebView2EnvironmentWithOptions(nullptr,
-		nullptr,
-		nullptr,
-		Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(this, &CHtmlDialog::OnCreateEnvironmentCompleted).Get());
+	HRESULT hr = CreateCoreWebView2EnvironmentWithOptions(	nullptr,
+															userDataDirectory.c_str(),
+															nullptr,
+															Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(this, &CHtmlDialog::OnCreateEnvironmentCompleted).Get());
+
+
+
 	if (!SUCCEEDED(hr))
 	{
 		ATLTRACE("function=%s , message=%s , hr=%d",__FUNCTION__, std::system_category().message(hr), hr);
 	}
+
+	if (HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) == hr)
+	{
+		MessageBox(L"Unable to find the WebView2 engine", L"WebView_Sample", MB_OK | MB_ICONERROR);
+	}
+
 	return (hr);
 }
 

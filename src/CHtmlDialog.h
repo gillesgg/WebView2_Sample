@@ -62,7 +62,7 @@ private:
 	HRESULT		OnCreateWebViewControllerCompleted(HRESULT result, ICoreWebView2Controller* controller);
 	HRESULT		RegisterEventHandlers();
 	void		RunAsync(CallbackFunc callback);
-
+	std::wstring GetAppDataDirectory();
 
 private:
 	std::map<CallbackType, CallbackFunc>	m_callbacks;
