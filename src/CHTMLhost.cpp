@@ -3,11 +3,11 @@
 #include "CHtmlDialog.h"
 
 
-INT_PTR CHTMLhost::ShowDialog(std::wstring url)
+INT_PTR CHTMLhost::ShowDialog(std::wstring_view url, std::wstring_view browserDirectory)
 {
 	if (!url.empty())
 	{
-		CHtmlDialog dialog(url);
+		CHtmlDialog dialog(url, browserDirectory);
 
 		dialog.RegisterCallback(CHtmlDialog::CallbackType::CreationCompleted, [this]()
 		{

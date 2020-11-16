@@ -26,11 +26,13 @@ namespace winrt::impl
 #include <shellscalingapi.h>
 
 // C RunTime Header Files
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstdio>
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
 #include <string>
+#include <string_view>
 #include <filesystem>
 #include <map>
 #include <functional>

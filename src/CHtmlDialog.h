@@ -37,7 +37,7 @@ public:
 		MESSAGE_HANDLER(MSG_RUN_ASYNC_CALLBACK, OnCallBack)
 	END_MSG_MAP()
 public:
-	CHtmlDialog(std::wstring url);
+	CHtmlDialog(std::wstring_view url, std::wstring_view browserDirectory);
 	CHtmlDialog();
 	~CHtmlDialog();
 	void		RegisterCallback(CallbackType const type, CallbackFunc callback);
@@ -69,6 +69,7 @@ private:
 	std::unique_ptr<WebView2Impl>			webview2imp_;
 	bool									m_isNavigating = false;
 	std::wstring							url_;
+	std::wstring							browserDirectory_;
 	EventRegistrationToken					m_navigationStartingToken = {};
 	EventRegistrationToken					m_navigationCompletedToken = {};
 	EventRegistrationToken					m_documentTitleChangedToken = {};
