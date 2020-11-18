@@ -27,19 +27,16 @@ public:
 	};
 	using CallbackFunc = std::function<void(void)>;
 
-
-
-public:
 	BEGIN_MSG_MAP(CHtmlDialogBase)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		MESSAGE_HANDLER(WM_CLOSE, OnClose)
 		MESSAGE_HANDLER(WM_SIZE, OnSize)
 		MESSAGE_HANDLER(MSG_RUN_ASYNC_CALLBACK, OnCallBack)
 	END_MSG_MAP()
-public:
+
 	CHtmlDialog(std::wstring_view url, std::wstring_view browserDirectory);
 	CHtmlDialog();
-	~CHtmlDialog();
+	virtual ~CHtmlDialog();
 	void		RegisterCallback(CallbackType const type, CallbackFunc callback);
 
 	LRESULT		OnCallBack(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
@@ -47,13 +44,13 @@ public:
 	LRESULT		OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT		OnSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 
-public:
 	std::wstring_view GetURL();
-	HRESULT NavigateTo(std::wstring_view url);
+	HRESULT		NavigateTo(std::wstring_view url);
 	HRESULT		DisablePopups();
 	HRESULT		Navigate(std::wstring_view url, CallbackFunc onComplete);
 	HRESULT		DisableDevelopper();
 	HRESULT		GetCookies();
+
 private:
 	HRESULT		InitWebView();
 	void		CloseWebView();
@@ -62,9 +59,8 @@ private:
 	HRESULT		OnCreateWebViewControllerCompleted(HRESULT result, ICoreWebView2Controller* controller);
 	HRESULT		RegisterEventHandlers();
 	void		RunAsync(CallbackFunc callback);
-	std::wstring GetAppDataDirectory();
+	fs::path	GetAppDataDirectory();
 
-private:
 	std::map<CallbackType, CallbackFunc>	m_callbacks;
 	std::unique_ptr<WebView2Impl>			webview2imp_;
 	bool									m_isNavigating = false;
@@ -74,6 +70,5 @@ private:
 	EventRegistrationToken					m_navigationCompletedToken = {};
 	EventRegistrationToken					m_documentTitleChangedToken = {};
 	EventRegistrationToken					webresourcerequestedToken_ = {};
-
 };
 

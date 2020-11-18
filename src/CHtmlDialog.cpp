@@ -79,22 +79,24 @@ void CHtmlDialog::CloseWebView()
 	}
 }
 
-std::wstring CHtmlDialog::GetAppDataDirectory()
+fs::path CHtmlDialog::GetAppDataDirectory()
 {
-	TCHAR path[MAX_PATH];
-	std::wstring dataDirectory;
-	HRESULT hr = SHGetFolderPath(nullptr, CSIDL_APPDATA, NULL, 0, path);
-	if (SUCCEEDED(hr))
+	fs::path dataDirectory;
+	std::wstring buffer(MAX_PATH, L'\0');
+	HRESULT hr = ::SHGetFolderPathW(nullptr, CSIDL_APPDATA, NULL, 0, buffer.data());
+	
+	if SUCCEEDED(hr)
 	{
-		dataDirectory = std::wstring(path);
-		dataDirectory.append(L"\\Microsoft\\");
+		buffer.resize(wcsnlen_s(buffer.data(), buffer.size()));
+		dataDirectory = buffer;
+		dataDirectory /= L"Microsoft";
 	}
 	else
 	{
-		dataDirectory = std::wstring(L".\\");
+		dataDirectory = L".";
 	}
 
-	dataDirectory.append(L"WebView_Sample");
+	dataDirectory /= L"WebView_Sample";
 	return dataDirectory;
 }
 
@@ -102,9 +104,9 @@ HRESULT CHtmlDialog::InitWebView()
 {
 	ATLTRACE("function=%s\n", __func__);
 
-	std::wstring userDataDirectory = GetAppDataDirectory();
-	userDataDirectory.append(L"\\User Data");
-
+	fs::path userDataDirectory = GetAppDataDirectory();
+	userDataDirectory /= L"User Data";
+	ATLTRACE("Using user data directory %ls\n", userDataDirectory.c_str());
 
 	auto options = Microsoft::WRL::Make<CoreWebView2EnvironmentOptions>();
 	HRESULT hr = options->put_AllowSingleSignOnUsingOSPrimaryAccount(TRUE);
@@ -122,10 +124,9 @@ HRESULT CHtmlDialog::InitWebView()
 	}
 
 	hr = CreateCoreWebView2EnvironmentWithOptions(browserDirectory_.empty() ? nullptr : browserDirectory_.data(), 
-		userDataDirectory.data(), options.Get(),
-		Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(this, &CHtmlDialog::OnCreateEnvironmentCompleted).Get());
-
-
+		userDataDirectory.c_str(), options.Get(),
+		Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(this, 
+			&CHtmlDialog::OnCreateEnvironmentCompleted).Get());
 
 	if FAILED(hr)
 	{
@@ -160,7 +161,9 @@ HRESULT CHtmlDialog::OnCreateEnvironmentCompleted(HRESULT result, ICoreWebView2E
 			ATLTRACE("function=%s, message=%s, hr=%d\n", __func__, std::system_category().message(result).data(), result);
 			return (result);
 		}
-		result = webview2imp_->webViewEnvironment_->CreateCoreWebView2Controller(m_hWnd, Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(this, &CHtmlDialog::OnCreateWebViewControllerCompleted).Get());
+		result = webview2imp_->webViewEnvironment_->CreateCoreWebView2Controller(m_hWnd, 
+			Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(this, 
+				&CHtmlDialog::OnCreateWebViewControllerCompleted).Get());
 		if FAILED(result)
 		{
 			ATLTRACE("function=%s, message=%s, hr=%d\n", __func__, std::system_category().message(result).data(), result);
@@ -243,9 +246,7 @@ HRESULT CHtmlDialog::RegisterEventHandlers()
 
 	// NavigationCompleted handler
 	hr = webview2imp_->webView_->add_NavigationCompleted(Callback<ICoreWebView2NavigationCompletedEventHandler>(
-		[this](
-			ICoreWebView2*,
-			ICoreWebView2NavigationCompletedEventArgs* args) -> HRESULT
+		[this](ICoreWebView2*, ICoreWebView2NavigationCompletedEventArgs* args) -> HRESULT
 		{
 			m_isNavigating = false;
 			HRESULT hr;

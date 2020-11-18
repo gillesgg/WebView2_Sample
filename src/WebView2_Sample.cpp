@@ -9,24 +9,30 @@
 // Returns Program Files directory x86.
 std::wstring GetProgramFilesx86Directory()
 {
+    constexpr std::wstring_view programFilesVarName = L"ProgramFiles";
+    constexpr std::wstring_view programFilesx86VarName = L"ProgramFiles(x86)";
+
     std::wstring programFilesx86Directory;
     size_t size = 0;
 
-    if (_wgetenv_s(&size, nullptr, 0, L"ProgramFiles(x86)") == 0)
+    if ((_wgetenv_s(&size, nullptr, 0, programFilesx86VarName.data()) == 0) && (size > 0))
     {   // Found env var %ProgramFiles(x86)%. Get its value.
-        programFilesx86Directory.resize(size, L'\0');
-        _wgetenv_s(&size, &programFilesx86Directory[0], programFilesx86Directory.size(), L"ProgramFiles(x86)");
+        programFilesx86Directory.resize(size);
+        _wgetenv_s(&size, programFilesx86Directory.data(), programFilesx86Directory.size(), 
+            programFilesx86VarName.data());
     }
     else
     {   // Assume x86 system. Try env var %ProgramFiles%.
-        if (_wgetenv_s(&size, nullptr, 0, L"ProgramFiles") == 0)
+        if ((_wgetenv_s(&size, nullptr, 0, programFilesVarName.data()) == 0) && (size > 0))
         {   // Found env var %ProgramFiles%. Get its value.
-            programFilesx86Directory.resize(size, L'\0');
-            _wgetenv_s(&size, &programFilesx86Directory[0], programFilesx86Directory.size(), L"ProgramFiles");
+            programFilesx86Directory.resize(size);
+            _wgetenv_s(&size, programFilesx86Directory.data(), programFilesx86Directory.size(), 
+                programFilesVarName.data());
         }
         else
         {
-            ATLTRACE("Failed to retrieve %%ProgramFiles(x86)%% and %%ProgramFile%% environment variables\n");
+            ATLTRACE("Failed to retrieve %%%ls%% and %%%ls%% environment variables\n",
+                programFilesx86VarName.data(), programFilesVarName.data());
         }
     }
     
@@ -75,17 +81,15 @@ std::wstring GetBrowserDirectory(std::wstring_view webView2Version, std::wstring
         
         size_t length = swprintf(nullptr, 0, format.data(),
             programFilesx86Directory.data(), pos->second.data(), webView2Version.data());
-        
         browserDirectory.resize(length + 1);
         
-        swprintf(&browserDirectory[0], browserDirectory.size(), format.data(), 
+        swprintf(browserDirectory.data(), browserDirectory.size(), format.data(), 
             programFilesx86Directory.data(), pos->second.data(), webView2Version.data());
-    
         browserDirectory.resize(length); // Remove trailing L'\0'.
 
-        std::filesystem::path browserPath(browserDirectory);
+        fs::path browserPath(browserDirectory);
         browserPath /= L"msedge.exe";
-        if (!std::filesystem::exists(browserPath))
+        if (!fs::exists(browserPath))
         {   // Return empty string if browser executable is not found.
             ATLTRACE("Incorrect browser path. File '%ls' not found\n", browserPath.c_str());
             return std::wstring();
