@@ -285,9 +285,7 @@ HRESULT CHtmlDialog::RegisterEventHandlers()
 	// NavigationStarting handler
 	hr = webview2imp_->webView_->add_NavigationStarting(
 		Callback<ICoreWebView2NavigationStartingEventHandler>(
-			[this](
-				ICoreWebView2*,
-				ICoreWebView2NavigationStartingEventArgs* args) -> HRESULT
+			[this](ICoreWebView2*, ICoreWebView2NavigationStartingEventArgs* args) -> HRESULT
 			{
 				wil::unique_cotaskmem_string uri;
 				args->get_Uri(&uri);
