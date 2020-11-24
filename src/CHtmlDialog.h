@@ -34,7 +34,8 @@ public:
 		MESSAGE_HANDLER(MSG_RUN_ASYNC_CALLBACK, OnCallBack)
 	END_MSG_MAP()
 
-	CHtmlDialog(std::wstring_view url, std::wstring_view browserDirectory);
+	CHtmlDialog(std::wstring_view url, std::wstring_view browserDirectory,
+		std::wstring_view userDataDirectory);
 	CHtmlDialog();
 	virtual ~CHtmlDialog();
 	void		RegisterCallback(CallbackType const type, CallbackFunc callback);
@@ -59,13 +60,13 @@ private:
 	HRESULT		OnCreateWebViewControllerCompleted(HRESULT result, ICoreWebView2Controller* controller);
 	HRESULT		RegisterEventHandlers();
 	void		RunAsync(CallbackFunc callback);
-	fs::path	GetAppDataDirectory();
 
 	std::map<CallbackType, CallbackFunc>	m_callbacks;
 	std::unique_ptr<WebView2Impl>			webview2imp_;
 	bool									m_isNavigating = false;
 	std::wstring							url_;
 	std::wstring							browserDirectory_;
+	std::wstring							userDataDirectory_;
 	EventRegistrationToken					m_navigationStartingToken = {};
 	EventRegistrationToken					m_navigationCompletedToken = {};
 	EventRegistrationToken					m_documentTitleChangedToken = {};

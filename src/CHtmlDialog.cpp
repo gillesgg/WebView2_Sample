@@ -8,7 +8,8 @@
 #define VALUE_PROP L"value"
 #define NAME_PROP L"name"
 
-CHtmlDialog::CHtmlDialog(std::wstring_view url, std::wstring_view browserDirectory)
+CHtmlDialog::CHtmlDialog(std::wstring_view url, std::wstring_view browserDirectory,
+	std::wstring_view userDataDirectory)
 {
 	webview2imp_ = std::make_unique<WebView2Impl>();
 	m_callbacks[CallbackType::CreationCompleted] = nullptr;
@@ -16,6 +17,7 @@ CHtmlDialog::CHtmlDialog(std::wstring_view url, std::wstring_view browserDirecto
 	m_callbacks[CallbackType::AutentCompleted] = nullptr;
 	url_ = url;
 	browserDirectory_ = browserDirectory;
+	userDataDirectory_ = userDataDirectory;
 }
 
 CHtmlDialog::CHtmlDialog() {}
@@ -79,34 +81,10 @@ void CHtmlDialog::CloseWebView()
 	}
 }
 
-fs::path CHtmlDialog::GetAppDataDirectory()
-{
-	fs::path dataDirectory;
-	std::wstring buffer(MAX_PATH, L'\0');
-	HRESULT hr = ::SHGetFolderPathW(nullptr, CSIDL_APPDATA, NULL, 0, buffer.data());
-	
-	if SUCCEEDED(hr)
-	{
-		buffer.resize(wcsnlen_s(buffer.data(), buffer.size()));
-		dataDirectory = buffer;
-		dataDirectory /= L"Microsoft";
-	}
-	else
-	{
-		dataDirectory = L".";
-	}
-
-	dataDirectory /= L"WebView_Sample";
-	return dataDirectory;
-}
-
 HRESULT CHtmlDialog::InitWebView()
 {
 	ATLTRACE("function=%s\n", __func__);
-
-	fs::path userDataDirectory = GetAppDataDirectory();
-	userDataDirectory /= L"User Data";
-	ATLTRACE("Using user data directory %ls\n", userDataDirectory.c_str());
+	ATLTRACE("Using user data directory %ls\n", userDataDirectory_.data());
 
 	auto options = Microsoft::WRL::Make<CoreWebView2EnvironmentOptions>();
 	HRESULT hr = options->put_AllowSingleSignOnUsingOSPrimaryAccount(TRUE);
@@ -124,9 +102,9 @@ HRESULT CHtmlDialog::InitWebView()
 	}
 
 	hr = CreateCoreWebView2EnvironmentWithOptions(browserDirectory_.empty() ? nullptr : browserDirectory_.data(), 
-		userDataDirectory.c_str(), options.Get(),
-		Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(this, 
-			&CHtmlDialog::OnCreateEnvironmentCompleted).Get());
+			userDataDirectory_.data(), options.Get(),
+			Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(this, 
+				&CHtmlDialog::OnCreateEnvironmentCompleted).Get());
 
 	if FAILED(hr)
 	{

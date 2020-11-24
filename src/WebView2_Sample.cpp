@@ -49,42 +49,52 @@ struct WStringIgnoreCaseLess
     }
 };
 
-// Get directory containing the browser based on webView2Version and webView2Channel.
-// Returns empty string if webView2Version is empty.
-std::wstring GetBrowserDirectory(std::wstring_view webView2Version, std::wstring_view webView2Channel)
+// Get root Edge directory based on the channel.
+// Returns empty string if unknown channel.
+std::wstring_view GetRootEdgeDirectory(std::wstring_view webView2Channel)
 {
-    static std::map<std::wstring_view, std::wstring_view, WStringIgnoreCaseLess> channels = 
-    {   // Name of ancestor directory based on release channel.
+    static std::map<std::wstring_view, std::wstring_view, WStringIgnoreCaseLess> channels =
+    {   // Name of Edge directory based on release channel.
         { L"",          L"Edge" },
         { L"beta",      L"Edge Beta" },
         { L"dev",       L"Edge Dev" },
         { L"canary",    L"Edge Canary" },
     };
 
-    std::wstring browserDirectory;
-    auto pos = channels.find(webView2Channel); 
+    auto pos = channels.find(webView2Channel);
 
     if (pos == channels.end())
     {   // Invalid channel value.
         ATLTRACE("Incorrect channel value: \"%ls\". Allowed values:\n", webView2Channel.data());
         for (const auto& channelEntry : channels)
         {
-            ATLTRACE("\"%ls\"\n", channelEntry.first.data());   
+            ATLTRACE("\"%ls\"\n", channelEntry.first.data());
         }
-        return browserDirectory;
+
+        return L"";
     }
-    
-    if (!webView2Version.empty())
+
+    return pos->second;
+}
+
+// Get directory containing the browser based on webView2Version and webView2Channel.
+// Returns empty string if webView2Version is empty.
+std::wstring GetBrowserDirectory(std::wstring_view webView2Version, std::wstring_view webView2Channel)
+{
+    std::wstring browserDirectory = L"";
+    std::wstring_view rootEdgeDirectory = GetRootEdgeDirectory(webView2Channel);
+
+    if (!webView2Version.empty() && !rootEdgeDirectory.empty())
     {   // Build directory from env var and channel.
         std::wstring programFilesx86Directory = GetProgramFilesx86Directory();
         std::wstring_view format = LR"(%s\Microsoft\%s\Application\%s)";
         
         size_t length = swprintf(nullptr, 0, format.data(),
-            programFilesx86Directory.data(), pos->second.data(), webView2Version.data());
+            programFilesx86Directory.data(), rootEdgeDirectory.data(), webView2Version.data());
         browserDirectory.resize(length + 1);
         
         swprintf(browserDirectory.data(), browserDirectory.size(), format.data(), 
-            programFilesx86Directory.data(), pos->second.data(), webView2Version.data());
+            programFilesx86Directory.data(), rootEdgeDirectory.data(), webView2Version.data());
         browserDirectory.resize(length); // Remove trailing L'\0'.
 
         fs::path browserPath(browserDirectory);
@@ -97,6 +107,36 @@ std::wstring GetBrowserDirectory(std::wstring_view webView2Version, std::wstring
     }
 
     return browserDirectory;
+}
+
+// Get directory containing the user data based on webView2Version and webView2Channel.
+// Returns empty string if webView2Version is empty.
+std::wstring GetUserDataDirectory(std::wstring_view webView2Channel)
+{
+    std::wstring userDirectory(MAX_PATH, L'\0');
+
+    if FAILED(::SHGetFolderPathW(nullptr, CSIDL_LOCAL_APPDATA, NULL, 0, userDirectory.data()))
+    {   // Use current directory as default.
+        userDirectory = L".";
+    }
+
+    std::wstring_view rootEdgeDirectory = GetRootEdgeDirectory(webView2Channel);
+
+    if (rootEdgeDirectory.empty())
+    {   // Use stable channel as default. 
+        rootEdgeDirectory = GetRootEdgeDirectory(L"");
+    }
+
+    std::wstring_view format = LR"(%s\Microsoft\%s\User Data)";
+    size_t length = swprintf(nullptr, 0, format.data(), 
+        userDirectory.data(), rootEdgeDirectory.data());
+    std::wstring userDataDirectory(length + 1, L'\0');
+
+    swprintf(userDataDirectory.data(), userDataDirectory.size(), format.data(), 
+        userDirectory.data(), rootEdgeDirectory.data());
+    userDataDirectory.resize(length);
+
+    return userDataDirectory;
 }
 
 
@@ -142,9 +182,9 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     }
 
     // Verify that the WebView2 runtime is installed.
-    PWSTR versionInfo = nullptr;
-    hr = ::GetAvailableCoreWebView2BrowserVersionString(nullptr, &versionInfo);
-    if (FAILED(hr) || (versionInfo == nullptr))
+    PWSTR edgeVersionInfo = nullptr;
+    hr = ::GetAvailableCoreWebView2BrowserVersionString(nullptr, &edgeVersionInfo);
+    if (FAILED(hr) || (edgeVersionInfo == nullptr))
     {
         ATLTRACE("The WebView2 runtime is not installed\n");
         ::MessageBoxW(nullptr, L"Please install the WebView2 runtime before running this application,"
@@ -152,16 +192,34 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
             MB_OK | MB_ICONERROR);
         return - 1;
     }
-    else
-    {
-        ATLTRACE("Found installed WebView version %ls\n", versionInfo);
+
+    ATLTRACE("Found installed WebView version %ls\n", edgeVersionInfo);
+
+    if (webView2Version.empty())
+    {   // User did not provided specific WebView2 versions and channels.
+        // Set WebView2 version and channel to default values. 
+        std::wstring_view edgeVersionInfoStr = edgeVersionInfo;
+        size_t pos = edgeVersionInfoStr.find(L' ');
+
+        if ((edgeVersionInfoStr.size() > 0) && (pos < edgeVersionInfoStr.size() - 1))
+        {   // Assume Edge version with format 'x.y.z.t channel"
+            webView2Version = edgeVersionInfoStr.substr(0, pos);
+            webView2Channel = edgeVersionInfoStr.substr(pos + 1, edgeVersionInfoStr.size() - pos - 1);
+        }
+        else
+        {   // Assume Edge version with format 'x.y.z.t"
+            webView2Version = edgeVersionInfoStr;
+        }
     }
 
+
+
     CHTMLhost host;
-    host.ShowDialog(L"http://msdn.microsoft.com", GetBrowserDirectory(webView2Version, webView2Channel));
+    host.ShowDialog(L"http://msdn.microsoft.com", GetBrowserDirectory(webView2Version, webView2Channel),
+        GetUserDataDirectory(webView2Channel));
     
     // Cleanup.
-    ::LocalFree(versionInfo);
+    ::LocalFree(edgeVersionInfo);
     ::CoUninitialize();
     
     return 0;
