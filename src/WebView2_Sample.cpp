@@ -153,12 +153,14 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     if (argc > 1)
     {   // Assume first argument is WebView2 version to use, in the format "x.y.z.t".
         webView2Version = argv[1];
+        ATLTRACE("User-provided WebView2 version=%ls\n", webView2Version.data());
     }
 
     std::wstring_view webView2Channel = L"";
     if (argc > 2)
     {   // Assume second argument is WebView2 channel to use: "beta", "dev", "canary" or "" for stable channel.
         webView2Channel = argv[2];
+        ATLTRACE("User-provided WebView2 channel=%ls\n", webView2Channel.data());
     }
     
     // Set DPI awareness to PerMonitorV2.
@@ -204,12 +206,16 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
         if ((edgeVersionInfoStr.size() > 0) && (pos < edgeVersionInfoStr.size() - 1))
         {   // Assume Edge version with format 'x.y.z.t channel"
             webView2Version = edgeVersionInfoStr.substr(0, pos);
+            edgeVersionInfo[pos] = L'\0'; // Ensure webView2Version is null-terminated.
             webView2Channel = edgeVersionInfoStr.substr(pos + 1, edgeVersionInfoStr.size() - pos - 1);
         }
         else
         {   // Assume Edge version with format 'x.y.z.t"
             webView2Version = edgeVersionInfoStr;
         }
+
+        ATLTRACE("Using WebView2 version=%ls\n", webView2Version.data());
+        ATLTRACE("Using WebView2 channel=%ls\n", webView2Channel.data());
     }
 
 

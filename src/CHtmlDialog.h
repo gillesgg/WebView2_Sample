@@ -23,7 +23,7 @@ public:
 		CreationCompleted,
 		NavigationCompleted,
 		TitleChanged,
-		AutentCompleted,
+		AuthenticationCompleted,
 	};
 	using CallbackFunc = std::function<void(void)>;
 

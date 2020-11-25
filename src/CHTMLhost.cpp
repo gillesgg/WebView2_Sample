@@ -17,12 +17,12 @@ INT_PTR CHTMLhost::ShowDialog(std::wstring_view url, std::wstring_view browserDi
 
 		dialog.RegisterCallback(CHtmlDialog::CallbackType::NavigationCompleted, [this]()
 		{
-			ATLTRACE("message=%s\n", "CallbackType::AutentCompleted");
+			ATLTRACE("message=%s\n", "CallbackType::NavigationCompleted");
 		});
 
-		dialog.RegisterCallback(CHtmlDialog::CallbackType::AutentCompleted, [this]()
+		dialog.RegisterCallback(CHtmlDialog::CallbackType::AuthenticationCompleted, [this]()
 		{
-			ATLTRACE("message=%s\n", "CallbackType::AutentCompleted");
+			ATLTRACE("message=%s\n", "CallbackType::AuthenticationCompleted");
 		});
 		return dialog.DoModal();
 	}

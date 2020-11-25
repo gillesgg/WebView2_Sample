@@ -14,7 +14,7 @@ CHtmlDialog::CHtmlDialog(std::wstring_view url, std::wstring_view browserDirecto
 	webview2imp_ = std::make_unique<WebView2Impl>();
 	m_callbacks[CallbackType::CreationCompleted] = nullptr;
 	m_callbacks[CallbackType::NavigationCompleted] = nullptr;
-	m_callbacks[CallbackType::AutentCompleted] = nullptr;
+	m_callbacks[CallbackType::AuthenticationCompleted] = nullptr;
 	url_ = url;
 	browserDirectory_ = browserDirectory;
 	userDataDirectory_ = userDataDirectory;
@@ -205,7 +205,7 @@ HRESULT CHtmlDialog::OnCreateWebViewControllerCompleted(HRESULT result, ICoreWeb
 		ATLTRACE("function=%s, message=%s, hr=%d\n", __func__, std::system_category().message(hr).data(), hr);
 		return hr;
 	}
-	auto callback = m_callbacks[CallbackType::CreationCompleted];
+	auto& callback = m_callbacks[CallbackType::CreationCompleted];
 	if (callback == nullptr)
 	{
 		ATLTRACE("function=%s, message=unable to create callback", __func__);
@@ -249,7 +249,7 @@ HRESULT CHtmlDialog::RegisterEventHandlers()
 				uri = wil::make_cotaskmem_string(L"");
 			}
 
-			auto callback = m_callbacks[CallbackType::NavigationCompleted];
+			auto& callback = m_callbacks[CallbackType::NavigationCompleted];
 			if (callback != nullptr)
 				RunAsync(callback);
 
@@ -309,7 +309,7 @@ HRESULT CHtmlDialog::RegisterEventHandlers()
 					if (hr == S_OK)
 					{
 						ATLTRACE(L"name=%s value=%s\n", L"Authorization", authV);
-						auto callback = m_callbacks[CallbackType::AutentCompleted];
+						auto& callback = m_callbacks[CallbackType::AuthenticationCompleted];
 						if (callback == nullptr)
 						{
 							ATLTRACE("function=%s message=unable to create callback\n", __func__);
