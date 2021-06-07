@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "osutility.h"
 #include "CHtmlDialog.h"
 
 
@@ -94,14 +95,15 @@ HRESULT CHtmlDialog::InitWebView()
 		ATLTRACE("function=%s, message=%s, hr=%d\n", __func__, std::system_category().message(hr).data(), hr);
 	}
 
-	hr = options->put_Language(L"en-us");
+	std::wstring langid (osutility::GetUserMUI());
+	hr = options->put_Language(langid.c_str());
 	if FAILED(hr)
 	{
 		ATLTRACE("Failed to set language to en-us");
 		ATLTRACE("function=%s, message=%s, hr=%d\n", __func__, std::system_category().message(hr).data(), hr);
 	}
 
-	hr = CreateCoreWebView2EnvironmentWithOptions(browserDirectory_.empty() ? nullptr : browserDirectory_.data(), 
+	hr = CreateCoreWebView2EnvironmentWithOptions( browserDirectory_.empty() ? nullptr : browserDirectory_.data(), 
 			userDataDirectory_.data(), options.Get(),
 			Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(this, 
 				&CHtmlDialog::OnCreateEnvironmentCompleted).Get());
@@ -110,15 +112,12 @@ HRESULT CHtmlDialog::InitWebView()
 	{
 		ATLTRACE("function=%s, message=%s, hr=%d\n", __func__, std::system_category().message(hr).data(), hr);
 	}
-
 	if (HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) == hr)
 	{
 		MessageBox(L"Unable to find the WebView2 engine", L"WebView_Sample", MB_OK | MB_ICONERROR);
 	}
-
 	return (hr);
 }
-
 
 HRESULT CHtmlDialog::OnCreateEnvironmentCompleted(HRESULT result, ICoreWebView2Environment* environment)
 {

@@ -16,12 +16,6 @@
     <Filter Include="Utility">
       <UniqueIdentifier>{0715526e-d89a-493d-9341-fcece95f7a8d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Utility\Logger">
-      <UniqueIdentifier>{8193b5e5-eaf2-42c1-b629-1a4867accab8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Utility\Profile">
-      <UniqueIdentifier>{f2da525f-715c-4431-a849-43a6e54b4d78}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -45,6 +39,9 @@
     <ClInclude Include="CHTMLhost.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="osutility.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WebView2_Sample.cpp">
@@ -58,6 +55,9 @@
     </ClCompile>
     <ClCompile Include="CHTMLhost.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="osutility.cpp">
+      <Filter>Utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -5,139 +5,7 @@
 #include "framework.h"
 #include "WebView2_Sample.h"
 #include "CHTMLhost.h" 
-
-// Returns Program Files directory x86.
-std::wstring GetProgramFilesx86Directory()
-{
-    constexpr std::wstring_view programFilesVarName = L"ProgramFiles";
-    constexpr std::wstring_view programFilesx86VarName = L"ProgramFiles(x86)";
-
-    std::wstring programFilesx86Directory;
-    size_t size = 0;
-
-    if ((_wgetenv_s(&size, nullptr, 0, programFilesx86VarName.data()) == 0) && (size > 0))
-    {   // Found env var %ProgramFiles(x86)%. Get its value.
-        programFilesx86Directory.resize(size);
-        _wgetenv_s(&size, programFilesx86Directory.data(), programFilesx86Directory.size(), 
-            programFilesx86VarName.data());
-    }
-    else
-    {   // Assume x86 system. Try env var %ProgramFiles%.
-        if ((_wgetenv_s(&size, nullptr, 0, programFilesVarName.data()) == 0) && (size > 0))
-        {   // Found env var %ProgramFiles%. Get its value.
-            programFilesx86Directory.resize(size);
-            _wgetenv_s(&size, programFilesx86Directory.data(), programFilesx86Directory.size(), 
-                programFilesVarName.data());
-        }
-        else
-        {
-            ATLTRACE("Failed to retrieve %%%ls%% and %%%ls%% environment variables\n",
-                programFilesx86VarName.data(), programFilesVarName.data());
-        }
-    }
-    
-    return programFilesx86Directory;
-}
-
-// Use for case-insensitive wstring keys in std::map.
-struct WStringIgnoreCaseLess
-{
-    bool operator()(std::wstring_view s1, std::wstring_view s2) const
-    {
-
-        return _wcsicmp(s1.data(), s2.data()) < 0;
-    }
-};
-
-// Get root Edge directory based on the channel.
-// Returns empty string if unknown channel.
-std::wstring_view GetRootEdgeDirectory(std::wstring_view webView2Channel)
-{
-    static std::map<std::wstring_view, std::wstring_view, WStringIgnoreCaseLess> channels =
-    {   // Name of Edge directory based on release channel.
-        { L"",          L"Edge" },
-        { L"beta",      L"Edge Beta" },
-        { L"dev",       L"Edge Dev" },
-        { L"canary",    L"Edge Canary" },
-    };
-
-    auto pos = channels.find(webView2Channel);
-
-    if (pos == channels.end())
-    {   // Invalid channel value.
-        ATLTRACE("Incorrect channel value: \"%ls\". Allowed values:\n", webView2Channel.data());
-        for (const auto& channelEntry : channels)
-        {
-            ATLTRACE("\"%ls\"\n", channelEntry.first.data());
-        }
-
-        return L"";
-    }
-
-    return pos->second;
-}
-
-// Get directory containing the browser based on webView2Version and webView2Channel.
-// Returns empty string if webView2Version is empty.
-std::wstring GetBrowserDirectory(std::wstring_view webView2Version, std::wstring_view webView2Channel)
-{
-    std::wstring browserDirectory = L"";
-    std::wstring_view rootEdgeDirectory = GetRootEdgeDirectory(webView2Channel);
-
-    if (!webView2Version.empty() && !rootEdgeDirectory.empty())
-    {   // Build directory from env var and channel.
-        std::wstring programFilesx86Directory = GetProgramFilesx86Directory();
-        std::wstring_view format = LR"(%s\Microsoft\%s\Application\%s)";
-        
-        size_t length = swprintf(nullptr, 0, format.data(),
-            programFilesx86Directory.data(), rootEdgeDirectory.data(), webView2Version.data());
-        browserDirectory.resize(length + 1);
-        
-        swprintf(browserDirectory.data(), browserDirectory.size(), format.data(), 
-            programFilesx86Directory.data(), rootEdgeDirectory.data(), webView2Version.data());
-        browserDirectory.resize(length); // Remove trailing L'\0'.
-
-        fs::path browserPath(browserDirectory);
-        browserPath /= L"msedge.exe";
-        if (!fs::exists(browserPath))
-        {   // Return empty string if browser executable is not found.
-            ATLTRACE("Incorrect browser path. File '%ls' not found\n", browserPath.c_str());
-            return std::wstring();
-        }
-    }
-
-    return browserDirectory;
-}
-
-// Get directory containing the user data based on webView2Version and webView2Channel.
-// Returns empty string if webView2Version is empty.
-std::wstring GetUserDataDirectory(std::wstring_view webView2Channel)
-{
-    std::wstring userDirectory(MAX_PATH, L'\0');
-
-    if FAILED(::SHGetFolderPathW(nullptr, CSIDL_LOCAL_APPDATA, NULL, 0, userDirectory.data()))
-    {   // Use current directory as default.
-        userDirectory = L".";
-    }
-
-    std::wstring_view rootEdgeDirectory = GetRootEdgeDirectory(webView2Channel);
-
-    if (rootEdgeDirectory.empty())
-    {   // Use stable channel as default. 
-        rootEdgeDirectory = GetRootEdgeDirectory(L"");
-    }
-
-    std::wstring_view format = LR"(%s\Microsoft\%s\User Data)";
-    size_t length = swprintf(nullptr, 0, format.data(), 
-        userDirectory.data(), rootEdgeDirectory.data());
-    std::wstring userDataDirectory(length + 1, L'\0');
-
-    swprintf(userDataDirectory.data(), userDataDirectory.size(), format.data(), 
-        userDirectory.data(), rootEdgeDirectory.data());
-    userDataDirectory.resize(length);
-
-    return userDataDirectory;
-}
+#include "osutility.h"
 
 
 int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
@@ -158,11 +26,21 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
 
     std::wstring_view webView2Channel = L"";
     if (argc > 2)
-    {   // Assume second argument is WebView2 channel to use: "beta", "dev", "canary" or "" for stable channel.
+    {   // Assume second argument is WebView2 channel to use: "beta", "dev", "canary" or  "fixed" "" for stable channel.
         webView2Channel = argv[2];
         ATLTRACE("User-provided WebView2 channel=%ls\n", webView2Channel.data());
     }
-    
+
+    std::wstring_view webViewFolder = L"";
+    if (argc > 3)
+    {   // Assume second argument of WebView2 channel to use: "fixed".
+        // we read the folder
+        webViewFolder = argv[3];
+        ATLTRACE("User-provided WebView2 root folder=%ls\n", webViewFolder.data());
+    }
+
+
+
     // Set DPI awareness to PerMonitorV2.
     DPI_AWARENESS_CONTEXT dpiAwarenessContext = DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2;
     // Available since Windows 10 1703.
@@ -217,12 +95,9 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
         ATLTRACE("Using WebView2 version=%ls\n", webView2Version.data());
         ATLTRACE("Using WebView2 channel=%ls\n", webView2Channel.data());
     }
-
-
-
     CHTMLhost host;
-    host.ShowDialog(L"http://msdn.microsoft.com", GetBrowserDirectory(webView2Version, webView2Channel),
-        GetUserDataDirectory(webView2Channel));
+    host.ShowDialog(L"http://msdn.microsoft.com", osutility::GetBrowserDirectory(webView2Version, webView2Channel, webViewFolder),
+        osutility::GetUserDataDirectory(webView2Channel));
     
     // Cleanup.
     ::LocalFree(edgeVersionInfo);
